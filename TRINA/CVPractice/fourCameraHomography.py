@@ -103,7 +103,6 @@ while True:
     #cv2.imshow('Left Cam Warped | q for exit', leftCam_warp)
     cv2.resize(leftCam_warp, (0,0), fx=0.5, fy =0.5)
 
-    #np.concatenate()
 
     if cv2.waitKey(1) == ord('q'):
         print(fps)

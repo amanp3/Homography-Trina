@@ -162,16 +162,16 @@ t = time.time()
 patternSize = (8,6)
 
 
-#retFA, cornersFrontActual = cv2.findChessboardCorners(frontActual, patternSize)
-#retFD, cornersFrontDesired = cv2.findChessboardCorners(frontDesired, patternSize)
+retFA, cornersFrontActual = cv2.findChessboardCorners(frontActual, patternSize)
+retFD, cornersFrontDesired = cv2.findChessboardCorners(frontDesired, patternSize)
 #retRA, cornersRightActual = cv2.findChessboardCorners(rightActual, patternSize)
 #retRD, cornersRightDesired = cv2.findChessboardCorners(rightDesired, patternSize)
-#retLA, cornersLeftActual = cv2.findChessboardCorners(leftActual, patternSize)
-#retLD, cornersLeftDesired = cv2.findChessboardCorners(leftDesired, patternSize)
+retLA, cornersLeftActual = cv2.findChessboardCorners(leftActual, patternSize)
+retLD, cornersLeftDesired = cv2.findChessboardCorners(leftDesired, patternSize)
 
-#Hfront, _1 = cv2.findHomography(cornersFrontActual, cornersFrontDesired)
+Hfront, _1 = cv2.findHomography(cornersFrontActual, cornersFrontDesired)
 #Hright, _2 = cv2.findHomography(cornersRightActual, cornersRightDesired)
-#Hleft, _3 = cv2.findHomography(cornersLeftActual, cornersLeftDesired)
+Hleft, _3 = cv2.findHomography(cornersLeftActual, cornersLeftDesired)
 
 # imgTemp1 = cv2.warpPerspective(cv2.imread(r'C:\Users\Aman\Desktop\School\Python\frontStitchingImage.png'), Hfront, (frontActual.shape[1], frontActual.shape[0]))
 # cv2.imwrite('frontStitchingImageWarped.png', imgTemp1)
@@ -186,46 +186,34 @@ patternSize = (8,6)
 feature_extractor = 'orb' # one of 'sift', 'surf', 'brisk', 'orb'
 feature_matching = 'bf'
 
-#images to stitch, need to be while looped for live feed
-frontStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\front360Test.png')
+frontStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\panoTest1.png')
 #frontStitchImage_gray = cv2.cvtColor(frontStitchImage, cv2.COLOR_RGB2GRAY)
 
-leftStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\left360Test.png')
-# leftStitchImage_gray = cv2.cvtColor(leftStitchImage, cv2.COLOR_RGB2GRAY)
-
-backStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\back360Test.png')
-# backStitchImage_gray = cv2.cvtColor(backStitchImage, cv2.COLOR_RGB2GRAY)
-
-rightStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\right360Test.png')
-# rightStitchImage_gray = cv2.cvtColor(rightStitchImage, cv2.COLOR_RGB2GRAY)
+leftStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\panoTest2.png')
+#leftStitchImage_gray = cv2.cvtColor(leftStitchImage, cv2.COLOR_RGB2GRAY)
 
 
-#applies top down homography Uncomment next block of 4 lines if you want this to run
 #frontCam_warp = cv2.warpPerspective(frontStitchImage, Hfront, (frontActual.shape[1], frontActual.shape[0]))
-#leftCam_warp = cv2.warpPerspective(leftStitchImage, Hleft, (leftActual.shape[1], leftActual.shape[0]))
-#backCam_warp = cv2.warpPerspective(backStitchImage, Hback, (backActual.shape[1], backActual.shape[0]))
 #rightCam_warp = cv2.warpPerspective(rightActual, Hright, (rightActual.shape[1], rightActual.shape[0]))
+#leftCam_warp = cv2.warpPerspective(leftStitchImage, Hleft, (leftActual.shape[1], leftActual.shape[0]))
 
-
-#circumventing top down homography for testing
+#circumvents top down homography for debugging
 frontCam_warp = frontStitchImage
 leftCam_warp = leftStitchImage
-backCam_warp = backStitchImage
-rightCam_warp = rightStitchImage
-
 
 frontCam_warp_gray = cv2.cvtColor(frontCam_warp, cv2.COLOR_RGB2GRAY)
 leftCam_warp_gray = cv2.cvtColor(leftCam_warp, cv2.COLOR_RGB2GRAY)
-backCam_warp_gray = cv2.cvtColor(backCam_warp, cv2.COLOR_RGB2GRAY)
-rightCam_warp_gray = cv2.cvtColor(rightCam_warp, cv2.COLOR_RGB2GRAY)
 
 
 
+#rightStitchImg = cv2.imread(r'C:\Users\Aman\Desktop\School\Python\rightStitchingImage.png')
+#rightStitchImage = cv2.cvtColor(rightStitchImg, cv2.COLOR_RGB2GRAY)
+
+# backStitchImg = cv2.imread(r'C:\Users\Aman\Desktop\School\Python\backStitchingImage.png')
+# backStitchImage = cv2.cvtColor(backStitchImg, cv2.COLOR_RGB2GRAY)
 
 kpsA, featuresA = detectAndDescribe(frontCam_warp_gray, method=feature_extractor)
 kpsB, featuresB = detectAndDescribe(leftCam_warp_gray, method=feature_extractor)
-kpsC, featuresC = detectAndDescribe(backCam_warp_gray, method=feature_extractor)
-kpsD, featuresD = detectAndDescribe(rightCam_warp_gray, method=feature_extractor)
 
 # display the keypoints and features detected on both images
 fig, (ax1,ax2) = plt.subplots(nrows=1, ncols=2, figsize=(20,8), constrained_layout=False)
@@ -249,7 +237,7 @@ plt.show()
 
 M = getHomography(kpsA, kpsB, featuresA, featuresB, matches, reprojThresh=4)
 if M is None:
-    print("Error! Stitching Homogrraphy Matrix couldnt be calculated for kpsA and kpsB")
+    print("Error!")
 (matches, H, status) = M
 
 # Apply panorama correction
@@ -282,7 +270,29 @@ height = frontCam_warp.shape[0] + leftCam_warp.shape[0]
 #rightCam_warp = cv2.warpPerspective(rightActual, Hright, (rightActual.shape[1], rightActual.shape[0]))
 #leftCam_warp = cv2.warpPerspective(leftStitchImage, Hleft, (leftActual.shape[1], leftActual.shape[0]))
 
+#
+def warpTwoImages(img1, img2, H):
+    '''warp img2 to img1 with homograph H'''
+    h1,w1 = img1.shape[:2]
+    h2,w2 = img2.shape[:2]
+    pts1 = np.float32([[0,0],[0,h1],[w1,h1],[w1,0]]).reshape(-1,1,2)
+    pts2 = np.float32([[0,0],[0,h2],[w2,h2],[w2,0]]).reshape(-1,1,2)
+    pts2_ = cv2.perspectiveTransform(pts2, H)
+    pts = np.concatenate((pts1, pts2_), axis=0)
+    [xmin, ymin] = np.int32(pts.min(axis=0).ravel() - 0.5)
+    [xmax, ymax] = np.int32(pts.max(axis=0).ravel() + 0.5)
+    t = [-xmin,-ymin]
+    Ht = np.array([[1,0,t[0]],[0,1,t[1]],[0,0,1]]) # translate
 
+    result = cv2.warpPerspective(img2, Ht.dot(H), (xmax-xmin, ymax-ymin))
+    result[t[1]:h1+t[1],t[0]:w1+t[0]] = img1
+    return result
+
+dst_pts = np.float32([np.kp1[m.queryIdx].pt for m in np.good]).reshape(-1,1,2)
+src_pts = np.float32([np.kp2[m.trainIdx].pt for m in np.good]).reshape(-1,1,2)
+M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+
+result = warpTwoImages(img1_color, img2_color, M)
 
 result = cv2.warpPerspective(frontCam_warp, H, (width, height))
 result[0:leftCam_warp.shape[0], 0:leftCam_warp.shape[1]] = leftCam_warp
@@ -293,6 +303,14 @@ cv2.imshow('',result)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+
+
+
+
+
+
+
 
 # if cv2.waitKey(1) == ord('q'):
 #     #print(fps)

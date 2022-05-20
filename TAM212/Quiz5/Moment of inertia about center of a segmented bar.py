@@ -17,3 +17,8 @@ ybar = (rect2mass*(l1+l2)/2 + rect3mass*(l1+l3 + 2*l2)/2) / (rect1mass + rect2ma
 I = (1/12)*(rect1mass*(w**2 + l1**2) + rect2mass*(w**2 + l2**2) + rect3mass*(w**2 + l3**2))
 I+= rect1mass*ybar**2 + rect2mass*((l1+l2)/2 - ybar)**2 + rect3mass*((l1+l3+2*l2)/2 - ybar)**2
 print(I)
+
+I = 2
+I +=4
+I = I + 4
+print(I)

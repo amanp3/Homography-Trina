@@ -1,19 +1,10 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-#import imageio
-import io
+import imageio
 import imutils
-
-import matplotlib
-matplotlib.use('TkAgg')
-
+import pdb
 cv2.ocl.setUseOpenCL(False)
-
-#pathFrontCamDesired = r'C:\Users\Aman\Desktop\School\Python\frontCamDesired.png'
-#pathRightCamDesired = r'C:\Users\Aman\Desktop\School\Python\rightCamDesired.png'
-#pathLeftCamDesired = r'C:\Users\Aman\Desktop\School\Python\leftCamDesired.png'
-
 
 # select the image id (valid values 1,2,3, or 4)
 feature_extractor = 'orb' # one of 'sift', 'surf', 'brisk', 'orb'
@@ -21,44 +12,22 @@ feature_matching = 'bf'
 
 # read images and transform them to grayscale
 # Make sure that the train image is the image that will be transformed
-#trainImg = imageio.imread('http://www.ic.unicamp.br/~helio/imagens_registro/foto1A.jpg')
-#trainImg_gray = cv2.cvtColor(trainImg, cv2.COLOR_RGB2GRAY)
-
-#uncomment this 4 lines
-trainImg = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\TrinaLab180Test1.png')
+trainImg = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\front360Test.png')
 trainImg_gray = cv2.cvtColor(trainImg, cv2.COLOR_RGB2GRAY)
-queryImg = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\TrinaLab180Test2.png')
-queryImg_gray = cv2.cvtColor(queryImg, cv2.COLOR_RGB2GRAY)
 
-#queryImg = imageio.imread('http://www.ic.unicamp.br/~helio/imagens_registro/foto1B.jpg')
-
+queryImg = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\left360Test.png')
 # Opencv defines the color channel in the order BGR. 
 # Transform it to RGB to be compatible to matplotlib
-#queryImg_gray = cv2.cvtColor(queryImg, cv2.COLOR_RGB2GRAY)
+queryImg_gray = cv2.cvtColor(queryImg, cv2.COLOR_RGB2GRAY)
 
+fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, constrained_layout=False, figsize=(16,9))
+ax1.imshow(queryImg, cmap="gray")
+ax1.set_xlabel("Query image", fontsize=14)
 
-# trainImg = cv2.imread(r'C:\Users\Aman\Desktop\School\Python\train.png')
-# queryImg = cv2.imread(r'C:\Users\Aman\Desktop\School\Python\query.png')
-# trainImg_gray = cv2.cvtColor(trainImg, cv2.COLOR_RGB2GRAY)
-# queryImg_gray = cv2.cvtColor(queryImg, cv2.COLOR_RGB2GRAY)
+ax2.imshow(trainImg, cmap="gray")
+ax2.set_xlabel("Train image (Image to be transformed)", fontsize=14)
 
-
-t1 = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\panoTest1.png')
-t1 = cv2.cvtColor(t1, cv2.COLOR_RGB2GRAY)
-t2 = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\panoTest2.png')
-t2 = cv2.cvtColor(t2, cv2.COLOR_RGB2GRAY)
-
-t1 = trainImg
-t2 = queryImg
-
-# fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, constrained_layout=False, figsize=(16,9))
-# ax1.imshow(queryImg, cmap="gray")
-# ax1.set_xlabel("Query image", fontsize=14)
-
-# ax2.imshow(trainImg, cmap="gray")
-# ax2.set_xlabel("Train image (Image to be transformed)", fontsize=14)
-
-# plt.show()
+plt.show()
 
 def detectAndDescribe(image, method=None):
     """
@@ -75,12 +44,15 @@ def detectAndDescribe(image, method=None):
     elif method == 'brisk':
         descriptor = cv2.BRISK_create()
     elif method == 'orb':
-        descriptor = cv2.ORB_create()
+        descriptor = cv2.ORB_create(nfeatures = 50000)
         
     # get keypoints and descriptors
     (kps, features) = descriptor.detectAndCompute(image, None)
     
     return (kps, features)
+
+
+
 
 kpsA, featuresA = detectAndDescribe(trainImg_gray, method=feature_extractor)
 kpsB, featuresB = detectAndDescribe(queryImg_gray, method=feature_extractor)
@@ -94,7 +66,6 @@ ax2.set_xlabel("(b)", fontsize=14)
 
 plt.show()
 
-
 def createMatcher(method,crossCheck):
     "Create and return a Matcher Object"
     
@@ -102,7 +73,7 @@ def createMatcher(method,crossCheck):
         bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=crossCheck)
     elif method == 'orb' or method == 'brisk':
         bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=crossCheck)
-    return bf
+    return bf   
 
 def matchKeyPointsBF(featuresA, featuresB, method):
     bf = createMatcher(method, crossCheck=True)
@@ -112,6 +83,7 @@ def matchKeyPointsBF(featuresA, featuresB, method):
     
     # Sort the features in order of distance.
     # The points with small distance (more similarity) are ordered first in the vector
+#     pdb.set_trace()
     rawMatches = sorted(best_matches, key = lambda x:x.distance)
     print("Raw matches (Brute force):", len(rawMatches))
     return rawMatches
@@ -131,10 +103,9 @@ def matchKeyPointsKNN(featuresA, featuresB, ratio, method):
             matches.append(m)
     return matches
 
-
 print("Using: {} feature matcher".format(feature_matching))
 
-# fig = plt.figure(figsize=(20,8))
+fig = plt.figure(figsize=(20,8))
 
 if feature_matching == 'bf':
     matches = matchKeyPointsBF(featuresA, featuresB, method=feature_extractor)
@@ -172,107 +143,65 @@ M = getHomography(kpsA, kpsB, featuresA, featuresB, matches, reprojThresh=4)
 if M is None:
     print("Error!")
 (matches, H, status) = M
-#print(matches)
 print(H)
-
-# define a function which returns an image as numpy array from figure
-def get_img_from_fig(fig, dpi=180):
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=dpi)
-    buf.seek(0)
-    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
-    buf.close()
-    img = cv2.imdecode(img_arr, 1)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    return img
 
 # Apply panorama correction
 width = trainImg.shape[1] + queryImg.shape[1]
 height = trainImg.shape[0] + queryImg.shape[0]
+# from copy import deepcopy
+# result1 = cv2.warpPerspective(trainImg, H, (width, height))
+# result2 = deepcopy(result1)
+# result2[0:queryImg.shape[0], 0:queryImg.shape[1]] = queryImg
+
+def warpTwoImages(img1, img2, H):
+    '''warp img2 to img1 with homograph H'''
+    h1,w1 = img1.shape[:2]
+    h2,w2 = img2.shape[:2]
+    pts1 = np.float32([[0,0],[0,h1],[w1,h1],[w1,0]]).reshape(-1,1,2)
+    pts2 = np.float32([[0,0],[0,h2],[w2,h2],[w2,0]]).reshape(-1,1,2)
+    pts2_ = cv2.perspectiveTransform(pts2, H)
+    pts = np.concatenate((pts1, pts2_), axis=0)
+    [xmin, ymin] = np.int32(pts.min(axis=0).ravel() - 0.5)
+    [xmax, ymax] = np.int32(pts.max(axis=0).ravel() + 0.5)
+    t = [-xmin,-ymin]
+    Ht = np.array([[1,0,t[0]],[0,1,t[1]],[0,0,1]]) # translate
+
+    result = cv2.warpPerspective(img2, Ht.dot(H), (xmax-xmin, ymax-ymin))
+    result[t[1]:h1+t[1],t[0]:w1+t[0]] = img1
+    return result
 
 
-result = cv2.warpPerspective(t1, H, (width, height))
+result = warpTwoImages(queryImg,trainImg,H)
+plt.imshow(result)
 
 plt.figure(figsize=(20,10))
 plt.imshow(result)
 
 plt.axis('off')
-
-
 plt.show()
 
+cv2.imshow('', result)
 
-result[0:t2.shape[0], 0:t2.shape[1]] = t2
-
-#cv2.imshow('',result)
-plt.figure(figsize=(20,10))
-plt.imshow(result)
-
-plt.axis('off')
-
-
-plt.show()
-
-# width = stitch1.shape[1] + stitch2.shape[1]
-# height = stitch1.shape[0] + stitch2.shape[0]
-
-# result = cv2.warpPerspective(stitch1, H, (width, height))
-
-
-# result[0:stitch2.shape[0], 0:stitch2.shape[1]] = stitch2
-
-#plot_img_np = get_img_from_fig(result)
-# convert canvas to image
-# img = np.fromstring(result.canvas.tostring_rgb(), dtype=np.uint8,
-#         sep='')
-# img  = img.reshape(result.canvas.get_width_height()[::-1] + (3,))
-
-# img is rgb, convert to opencv's default bgr
-#img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)
-
-#cv2.imshow(plot_img_np)
-
-
-
-# plt.figure(figsize=(20,10))
-# plt.imshow(result)
-
-# plt.axis('off')
-
-
-# plt.show()
-
-
-
-
-
-
-# # transform the panorama image to grayscale and threshold it 
-# gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-# thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY)[1]
-
-# # Finds contours from the binary image
-# cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-# cnts = imutils.grab_contours(cnts)
-
-# # get the maximum contour area
-# c = max(cnts, key=cv2.contourArea)
-
-# # get a bbox from the contour area
-# (x, y, w, h) = cv2.boundingRect(c)
-
-# # crop the image to the bbox coordinates
-# result = result[y:y + h, x:x + w]
-
-# # show the cropped image
-# plt.figure(figsize=(20,10))
-# plt.imshow(result)
-
-# canvas = plt.gca().figure.canvas
-# canvas.draw()
-# data = np.frombuffer(canvas.tostring_rgb(), dtype=np.uint8)
-# image = data.reshape(canvas.get_width_height()[::-1] + (3,))
-# cv2.imshow('benin', image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+# transform the panorama image to grayscale and threshold it 
+gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
+thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY)[1]
+
+# Finds contours from the binary image
+cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+cnts = imutils.grab_contours(cnts)
+
+# get the maximum contour area
+c = max(cnts, key=cv2.contourArea)
+
+# get a bbox from the contour area
+(x, y, w, h) = cv2.boundingRect(c)
+
+# crop the image to the bbox coordinates
+result = result[y:y + h, x:x + w]
+
+# show the cropped image
+plt.figure(figsize=(20,10))
+plt.imshow(result)
