@@ -3,7 +3,8 @@
 #Code to generate 360 Birds eye of TRINA surrounding using 4 usb cameras
 
 from re import sub
-from turtle import back, right
+from turtle import back, left, right
+from cv2 import destroyAllWindows
 import numpy as np
 import cv2
 import time
@@ -14,10 +15,35 @@ cv2.ocl.setUseOpenCL(False)
 
 #where is each camera
 frontIndex = 0
-leftIndex = 3
-backIndex = 2
-rightIndex = 1
-spareCam = 2
+leftIndex = 1
+backIndex = 3
+rightIndex = 2
+spareCam = 3
+
+#cv2.undistort(img, mtx, dist, None, newcameramtx)
+#mtx, dist, newcameramtx
+
+frontMtx = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\frontMtx.npy')
+frontDist = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\frontDist.npy')
+frontNewCameraMatrix = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\frontNewCameraMatrix.npy')
+frontROI= np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\frontROI.npy')
+
+# print(frontROI)
+
+leftMtx = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\leftMtx.npy')
+leftDist = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\leftDist.npy')
+leftNewCameraMatrix = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\leftNewCameraMatrix.npy')
+leftROI= np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\leftROI.npy')
+
+backMtx = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\backMtx.npy')
+backDist = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\backDist.npy')
+backNewCameraMatrix = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\backNewCameraMatrix.npy')
+backROI = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\backROI.npy')
+
+rightMtx = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\rightMtx.npy')
+rightDist = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\rightDist.npy')
+rightNewCameraMatrix = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\rightNewCameraMatrix.npy')
+rightROI= np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\rightROI.npy')
 
 #Set and get frame size example
 # cap = cv2.VideoCapture(0)
@@ -55,21 +81,23 @@ def takePicture(fileName, camNumber):
 
 def calibrate():
     #taking pics for the gram 
+
+    takePicture('backCamActual.png', backIndex)
+    takePicture('backCamDesired.png', spareCam)
+
+    takePicture('frontCamActual.png', frontIndex)
+    takePicture('frontCamDesired.png', spareCam) 
+    takePicture('rightCamActual.png', rightIndex)  
+    takePicture('rightCamDesired.png',  spareCam) 
+    takePicture('leftCamActual.png', leftIndex)
+    takePicture('leftCamDesired.png', spareCam)
     
-    # takePicture('frontCamActual.png', frontIndex)
-    # takePicture('frontCamDesired.png', spareCam) 
-    # takePicture('rightCamActual.png', rightIndex)  
-    # takePicture('rightCamDesired.png',  spareCam) 
-    # takePicture('leftCamActual.png', leftIndex)
-    # takePicture('leftCamDesired.png', spareCam)
-    # takePicture('backCamActual.png', backIndex)
-    # takePicture('backCamDesired.png', spareCam)
     
 
-    takePicture('frontStitchingImage.png', frontIndex)
-    takePicture('leftStitchingImage.png', leftIndex)
-    takePicture('backStitchingImage.png', backIndex)
-    takePicture('rightStitchingImage.png', rightIndex)
+    # takePicture('frontStitchingImage.png', frontIndex)
+    # takePicture('leftStitchingImage.png', leftIndex)
+    # takePicture('backStitchingImage.png', backIndex)
+    # takePicture('rightStitchingImage.png', rightIndex)
 
 #functions for stitching below
 def detectAndDescribe(image, method=None):
@@ -184,6 +212,32 @@ leftDesired = cv2.imread(pathLeftCamDesired)
 backActual = cv2.imread(pathBackCamActual)
 backDesired = cv2.imread(pathBackCamDesired)
 
+def undistortImage(img, mtx, dist, newcameramtx, roi):
+    h,  w = img.shape[:2]
+    dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+    # crop the image
+    x, y, w, h = roi
+    dst = dst[y:y+h, x:x+w]
+    return dst
+
+# frontActual = undistortImage(frontActual, frontMtx, frontDist, frontNewCameraMatrix, frontROI)
+# frontDesired = undistortImage(frontDesired, frontMtx, frontDist, frontNewCameraMatrix, frontROI)
+# rightActual = undistortImage(rightActual, rightMtx, rightDist, rightNewCameraMatrix, rightROI)
+# rightDesired = undistortImage(rightDesired, rightMtx, rightDist, rightNewCameraMatrix, rightROI)
+# leftActual = undistortImage(leftActual, leftMtx, leftDist, leftNewCameraMatrix, leftROI)
+# leftDesired = undistortImage(leftDesired, leftMtx, leftDist, leftNewCameraMatrix, leftROI)
+# backActual = undistortImage(backActual, backMtx, backDist, backNewCameraMatrix, backROI)
+# backDesired = undistortImage(backDesired, backMtx, backDist, backNewCameraMatrix, backROI)
+
+frontActual = undistortImage(frontActual, frontMtx, frontDist, frontNewCameraMatrix, frontROI)
+frontDesired = undistortImage(frontDesired, frontMtx, frontDist, frontNewCameraMatrix, frontROI)
+rightActual = undistortImage(rightActual, rightMtx, rightDist, rightNewCameraMatrix, rightROI)
+rightDesired = undistortImage(rightDesired, rightMtx, rightDist, rightNewCameraMatrix, rightROI)
+leftActual = undistortImage(leftActual, leftMtx, leftDist, leftNewCameraMatrix, leftROI)
+leftDesired = undistortImage(leftDesired, leftMtx, leftDist, leftNewCameraMatrix, leftROI)
+backActual = undistortImage(backActual, backMtx, backDist, backNewCameraMatrix, backROI)
+backDesired = undistortImage(backDesired, backMtx, backDist, backNewCameraMatrix, backROI)
+
 t = time.time()
 
 #patternSize stores the size of the chessboard you are looking for
@@ -204,6 +258,7 @@ Hright, _2 = cv2.findHomography(cornersRightActual, cornersRightDesired)
 Hleft, _3 = cv2.findHomography(cornersLeftActual, cornersLeftDesired)
 Hback, _4 = cv2.findHomography(cornersBackActual, cornersBackDesired)
 print("Top Down Matricies Computed")
+
 # imgTemp1 = cv2.warpPerspective(cv2.imread(r'C:\Users\Aman\Desktop\School\Python\frontStitchingImage.png'), Hfront, (frontActual.shape[1], frontActual.shape[0]))
 # cv2.imwrite('frontStitchingImageWarped.png', imgTemp1)
 # imgTemp2 = cv2.warpPerspective(cv2.imread(r'C:\Users\Aman\Desktop\School\Python\leftStitchingImage.png'), Hleft, (frontActual.shape[1], frontActual.shape[0]))
@@ -223,16 +278,31 @@ leftStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\School\Python\TRINA\leftSti
 backStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\School\Python\TRINA\backStitchingImage.png')
 rightStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\School\Python\TRINA\rightStitchingImage.png')
 
+# cv2.imshow('front path', frontStitchImage)
+# cv2.imshow('left path', leftStitchImage)
+# cv2.imshow('back path', backStitchImage)
+# cv2.imshow('right path', rightStitchImage)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+frontStitchImage = undistortImage(frontStitchImage, frontMtx, frontDist, frontNewCameraMatrix, frontROI)
+leftStitchImage = undistortImage(leftStitchImage, leftMtx, leftDist, leftNewCameraMatrix, leftROI)
+backStitchImage = undistortImage(backStitchImage, backMtx, backDist, backNewCameraMatrix, backROI)
+rightStitchImage = undistortImage(rightStitchImage, rightMtx, rightDist, rightNewCameraMatrix, rightROI)
+
+# cv2.imshow('front undistort', frontStitchImage)
+# cv2.imshow('left undistort', leftStitchImage)
+# cv2.imshow('back undistort', backStitchImage)
+# cv2.imshow('right undistort', rightStitchImage)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
 #test images
 # frontStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\LabTest\imgF.png')
 # leftStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\LabTest\imgL.png')
 # backStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\LabTest\imgB.png')
 # rightStitchImage = cv2.imread(r'C:\Users\Aman\Desktop\TRINA\OPENCV\LabTest\imgR.png')
 
-# frontCam_warp_gray = cv2.cvtColor(frontCam_warp, cv2.COLOR_RGB2GRAY)
-# leftCam_warp_gray = cv2.cvtColor(leftCam_warp, cv2.COLOR_RGB2GRAY)
-# backCam_warp_gray = cv2.cvtColor(backCam_warp, cv2.COLOR_RGB2GRAY)
-# rightCam_warp_gray = cv2.cvtColor(rightCam_warp, cv2.COLOR_RGB2GRAY)
 
 #pass in the grayscale of images that need to be stitched (these will be the top down warped images)
 #needs both grayscale and normal to compute the stitching matrix properly
@@ -297,7 +367,7 @@ def warpSingleImage(img,H):
     print(t,xmax,ymax)
     Ht = np.array([[1,0,t[0]],[0,1,t[1]],[0,0,1]]) # translate
     result = cv2.warpPerspective(img, Ht.dot(H), (xmax-xmin, ymax-ymin))
-    result = cv2.resize(result,(480,720))
+    # result = cv2.resize(result,(720,1280))
 #     template[t[1]:h+t[1],t[0]:w+t[0]] = result
     return result
 
@@ -307,12 +377,27 @@ def warpSingleImage(img,H):
 # backStitchImage_warp = cv2.warpPerspective(backStitchImage, Hback, (backStitchImage.shape[1], backStitchImage.shape[0]))
 # rightStitchImage_warp = cv2.warpPerspective(rightStitchImage, Hright, (rightStitchImage.shape[1], rightStitchImage.shape[0]))
 
-# skips top down homography for debugging
-frontStitchImage_warp = frontStitchImage
-leftStitchImage_warp = leftStitchImage
-backStitchImage_warp = backStitchImage
-rightStitchImage_warp = rightStitchImage
+#top down no cropping
+frontStitchImage_warp = warpSingleImage(frontStitchImage, Hfront)
+leftStitchImage_warp = warpSingleImage(leftStitchImage, Hleft)
+backStitchImage_warp = warpSingleImage(backStitchImage, Hback)
+rightStitchImage_warp = warpSingleImage(rightStitchImage, Hright)
 
+
+
+# skips top down homography for debugging
+# frontStitchImage_warp = frontStitchImage
+# leftStitchImage_warp = leftStitchImage
+# backStitchImage_warp = backStitchImage
+# rightStitchImage_warp = rightStitchImage
+
+#show the warped stitching images
+cv2.imshow('front', frontStitchImage_warp)
+cv2.imshow('left', leftStitchImage_warp)
+cv2.imshow('back', backStitchImage_warp)
+cv2.imshow('right', rightStitchImage_warp)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 frontStitchImage_warp_gray = cv2.cvtColor(frontStitchImage_warp, cv2.COLOR_RGB2GRAY)
 leftStitchImage_warp_gray = cv2.cvtColor(leftStitchImage_warp, cv2.COLOR_RGB2GRAY)
@@ -330,7 +415,8 @@ subStitchFLB = warpTwoImages(backStitchImage_warp, subStitchFL, HFLB)
 subStitchFLB_gray = cv2.cvtColor(subStitchFLB, cv2.COLOR_RGB2GRAY)
 HFLBR = calculateStitchingMatrix(subStitchFLB, subStitchFLB_gray, rightStitchImage_warp, rightStitchImage_warp_gray)
 subStitchFLBR = warpTwoImages(rightStitchImage_warp, subStitchFLB, HFLBR)
-subStitchFLBR = cv2.resize(subStitchFLBR, (480, 640))
+cv2.imwrite('finalOutput.png', subStitchFLBR)
+subStitchFLBR = cv2.resize(subStitchFLBR, (720, 1280))
 cv2.imshow('subStitchFLBR', subStitchFLBR)
 cv2.waitKey(0)
 
@@ -352,6 +438,11 @@ while True:
     ret, frameBack = capBack.read()
     ret, frameRight = capRight.read()
 
+    frameFront= undistortImage(frameFront, frontMtx, frontDist, frontNewCameraMatrix, frontROI)
+    frameLeft = undistortImage(frameLeft, leftMtx, leftDist, leftNewCameraMatrix, leftROI)
+    frameBack = undistortImage(frameBack, backMtx, backDist, backNewCameraMatrix, backROI)
+    frameRight = undistortImage(frameRight, rightMtx, rightDist, rightNewCameraMatrix, rightROI)
+
     #circumventing top down homography for testing
     # frontCam_warp = frameFront
     # leftCam_warp = frameLeft
@@ -372,7 +463,7 @@ while True:
     #display the result of top down homography and stitching
     result = subStitchFLBR
 
-    result = cv2.resize(result, (1200, 800))
+    result = cv2.resize(result, (1280, 720))
     
     cv2.putText(result, str(int(fps)), (10,70), cv2.FONT_HERSHEY_PLAIN, 3, (255,0,255),3)
     cv2.imshow('front', frontCam_warp)

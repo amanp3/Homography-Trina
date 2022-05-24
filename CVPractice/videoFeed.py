@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import time
 
-camIndex = 1
+camIndex = 3
 
 cap = cv2.VideoCapture(camIndex)
 
