@@ -339,6 +339,11 @@ def calculateStitchingMatrix(img1, img1Gray, img2, img2Gray):
 
 def warpTwoImages(img1, img2, H):
     '''warp img2 to img1 with homograph H'''
+    mask = np.all(img1==np.array([0,0,0]).reshape(1,1,3), axis = 2)
+
+    blackPixels = np.where(mask == False)
+#     print(blackPixels)
+    
     h1,w1 = img1.shape[:2]
     h2,w2 = img2.shape[:2]
     pts1 = np.float32([[0,0],[0,h1],[w1,h1],[w1,0]]).reshape(-1,1,2)
@@ -349,9 +354,12 @@ def warpTwoImages(img1, img2, H):
     [xmax, ymax] = np.int32(pts.max(axis=0).ravel() + 0.5)
     t = [-xmin,-ymin]
     Ht = np.array([[1,0,t[0]],[0,1,t[1]],[0,0,1]]) # translate
+    
+    
 
     result = cv2.warpPerspective(img2, Ht.dot(H), (xmax-xmin, ymax-ymin))
-    result[t[1]:h1+t[1],t[0]:w1+t[0]] = img1
+    
+    result[t[1]+blackPixels[0],t[0]+blackPixels[1],:] = img1[blackPixels[0],blackPixels[1],:]
     return result
 
 def warpSingleImage(img,H):
@@ -383,6 +391,10 @@ leftStitchImage_warp = warpSingleImage(leftStitchImage, Hleft)
 backStitchImage_warp = warpSingleImage(backStitchImage, Hback)
 rightStitchImage_warp = warpSingleImage(rightStitchImage, Hright)
 
+# cv2.imwrite('frontStitch_warped.png', frontStitchImage_warp)
+# cv2.imwrite('leftStitch_warped.png', leftStitchImage_warp)
+# cv2.imwrite('backStitch_warped.png', backStitchImage_warp)
+# cv2.imwrite('rightStitch_warped.png', rightStitchImage_warp)
 
 
 # skips top down homography for debugging
@@ -419,6 +431,7 @@ cv2.imwrite('finalOutput.png', subStitchFLBR)
 subStitchFLBR = cv2.resize(subStitchFLBR, (720, 1280))
 cv2.imshow('subStitchFLBR', subStitchFLBR)
 cv2.waitKey(0)
+cv2.destroyAllWindows()
 
 print("DONE COMPUTING")
 
