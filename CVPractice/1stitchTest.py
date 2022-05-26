@@ -2,9 +2,10 @@
 #Written for AVATRINA,  Feb 2022
 #Code to generate 360 Birds eye of TRINA surrounding using 4 usb cameras
 
-from re import sub
-from turtle import back, left, right
-from cv2 import destroyAllWindows
+# from re import sub
+# from turtle import back, left, right
+# from cv2 import destroyAllWindows
+from cv2 import ROTATE_90_COUNTERCLOCKWISE
 import numpy as np
 import cv2
 import time
@@ -14,11 +15,11 @@ import imutils
 cv2.ocl.setUseOpenCL(False)
 
 #where is each camera
-frontIndex = 0
-leftIndex = 1
-backIndex = 3
-rightIndex = 2
-spareCam = 3
+frontIndex = 2
+leftIndex = 3
+backIndex = 0
+rightIndex = 1
+spareCam = 0
 
 #cv2.undistort(img, mtx, dist, None, newcameramtx)
 #mtx, dist, newcameramtx
@@ -45,6 +46,12 @@ rightDist = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\r
 rightNewCameraMatrix = np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\rightNewCameraMatrix.npy')
 rightROI= np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\rightROI.npy')
 
+trinaFromAbove= cv2.imread(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\TrinaTopView.png')
+# cv2.imshow('above', trinaFromAbove)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+
 #Set and get frame size example
 # cap = cv2.VideoCapture(0)
 # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 300)
@@ -52,6 +59,8 @@ rightROI= np.load(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\rig
 # width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 # height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 # print(width, height)
+
+
 
 ##########
 #this function takes the file name as a string eg: rightCamDesired.png and which camera: 1, 3, 5, or 7 and
@@ -84,7 +93,6 @@ def calibrate():
 
     takePicture('backCamActual.png', backIndex)
     takePicture('backCamDesired.png', spareCam)
-
     takePicture('frontCamActual.png', frontIndex)
     takePicture('frontCamDesired.png', spareCam) 
     takePicture('rightCamActual.png', rightIndex)  
@@ -92,12 +100,10 @@ def calibrate():
     takePicture('leftCamActual.png', leftIndex)
     takePicture('leftCamDesired.png', spareCam)
     
-    
-
-    # takePicture('frontStitchingImage.png', frontIndex)
-    # takePicture('leftStitchingImage.png', leftIndex)
-    # takePicture('backStitchingImage.png', backIndex)
-    # takePicture('rightStitchingImage.png', rightIndex)
+    takePicture('frontStitchingImage.png', frontIndex)
+    takePicture('leftStitchingImage.png', leftIndex)
+    takePicture('backStitchingImage.png', backIndex)
+    takePicture('rightStitchingImage.png', rightIndex)
 
 #functions for stitching below
 def detectAndDescribe(image, method=None):
@@ -289,7 +295,7 @@ frontStitchImage = undistortImage(frontStitchImage, frontMtx, frontDist, frontNe
 leftStitchImage = undistortImage(leftStitchImage, leftMtx, leftDist, leftNewCameraMatrix, leftROI)
 backStitchImage = undistortImage(backStitchImage, backMtx, backDist, backNewCameraMatrix, backROI)
 rightStitchImage = undistortImage(rightStitchImage, rightMtx, rightDist, rightNewCameraMatrix, rightROI)
-
+print("Undistortion Computed from Predetermined Intrinsics")
 # cv2.imshow('front undistort', frontStitchImage)
 # cv2.imshow('left undistort', leftStitchImage)
 # cv2.imshow('back undistort', backStitchImage)
@@ -310,7 +316,6 @@ def calculateStitchingMatrix(img1, img1Gray, img2, img2Gray):
     kpsA, featuresA = detectAndDescribe(img1Gray, method=feature_extractor)
     kpsB, featuresB = detectAndDescribe(img2Gray, method=feature_extractor)
     
-
     # display the keypoints and features detected on both images
     # fig, (ax1,ax2) = plt.subplots(nrows=1, ncols=2, figsize=(20,8), constrained_layout=False)
     # ax1.imshow(cv2.drawKeypoints(img1,kpsA,None,color=(0,255,0)))
@@ -328,8 +333,8 @@ def calculateStitchingMatrix(img1, img1Gray, img2, img2Gray):
         img3 = cv2.drawMatches(img1,kpsA,img2,kpsB,np.random.choice(matches,100),
                             None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
-    plt.imshow(img3)
-    plt.show()
+    # plt.imshow(img3)
+    # plt.show()
 
     M = getHomography(kpsA, kpsB, featuresA, featuresB, matches, reprojThresh=4)
     if M is None:
@@ -403,13 +408,27 @@ rightStitchImage_warp = warpSingleImage(rightStitchImage, Hright)
 # backStitchImage_warp = backStitchImage
 # rightStitchImage_warp = rightStitchImage
 
-#show the warped stitching images
-cv2.imshow('front', frontStitchImage_warp)
-cv2.imshow('left', leftStitchImage_warp)
-cv2.imshow('back', backStitchImage_warp)
-cv2.imshow('right', rightStitchImage_warp)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+#show the warped stitching images for debugging
+# cv2.imshow('front', frontStitchImage_warp)
+# cv2.imshow('left', leftStitchImage_warp)
+# cv2.imshow('back', backStitchImage_warp)
+# cv2.imshow('right', rightStitchImage_warp)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+# plt.imshow(frontStitchImage_warp)
+# plt.show()
+# plt.imshow(leftStitchImage_warp)
+# plt.show()
+# plt.imshow(backStitchImage_warp)
+# plt.show()
+# plt.imshow(rightStitchImage_warp)
+# plt.show()
+
+frontStitchImage_warp = frontStitchImage_warp[400:960, 0:1250]
+leftStitchImage_warp = leftStitchImage_warp[600:1228 , 1000:1900]
+backStitchImage_warp = backStitchImage_warp[2250:2732 , 750:2100]
+rightStitchImage_warp = rightStitchImage_warp[1500:1905 , 1250:2500]
 
 frontStitchImage_warp_gray = cv2.cvtColor(frontStitchImage_warp, cv2.COLOR_RGB2GRAY)
 leftStitchImage_warp_gray = cv2.cvtColor(leftStitchImage_warp, cv2.COLOR_RGB2GRAY)
@@ -427,12 +446,28 @@ subStitchFLB = warpTwoImages(backStitchImage_warp, subStitchFL, HFLB)
 subStitchFLB_gray = cv2.cvtColor(subStitchFLB, cv2.COLOR_RGB2GRAY)
 HFLBR = calculateStitchingMatrix(subStitchFLB, subStitchFLB_gray, rightStitchImage_warp, rightStitchImage_warp_gray)
 subStitchFLBR = warpTwoImages(rightStitchImage_warp, subStitchFLB, HFLBR)
-cv2.imwrite('finalOutput.png', subStitchFLBR)
-subStitchFLBR = cv2.resize(subStitchFLBR, (720, 1280))
-cv2.imshow('subStitchFLBR', subStitchFLBR)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# cv2.imwrite('finalOutput.png', subStitchFLBR)
+# subStitchFLBR = cv2.resize(subStitchFLBR, (720, 1280))
 
+# _,thresh = cv2.threshold(cv2.cvtColor(subStitchFLBR, cv2.COLOR_BGR2GRAY),1,255,cv2.THRESH_BINARY)
+# x,y,w,h = cv2.boundingRect(thresh)
+# subStitchFLBR = subStitchFLBR[y:y+h, x:x+w]
+
+#manual crop
+# subStitchFLBR = subStitchFLBR[1620:2450,4240:5200]
+subStitchFLBR = subStitchFLBR[400:1200,200:1200]
+# plt.imshow(subStitchFLBR)
+# plt.show()
+
+
+# cv2.imshow('subStitchFLBR', subStitchFLBR)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+    
+trinaFromAbove= cv2.resize(trinaFromAbove, (200,200))
+trinaFromAbove = cv2.rotate(trinaFromAbove, ROTATE_90_COUNTERCLOCKWISE)
+# print(trinaFromAbove.shape)
 print("DONE COMPUTING")
 
 capFront = cv2.VideoCapture(frontIndex)
@@ -440,7 +475,23 @@ capLeft = cv2.VideoCapture(leftIndex)
 capBack = cv2.VideoCapture(backIndex)
 capRight = cv2.VideoCapture(rightIndex)
 
+#sets all video feeds to the proper resolution
+capFront.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+capFront.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+capLeft.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+capLeft.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+capBack.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+capBack.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+capRight.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+capRight.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+# width1 = capFront.get(cv2.CAP_PROP_FRAME_WIDTH)
+# height1 = capFront.get(cv2.CAP_PROP_FRAME_HEIGHT)
+# print(width1, height1)
+
+
+
 pTime = 0
+
 while True:
     cTime = time.time()
     fps = 1/(cTime - pTime)
@@ -462,10 +513,15 @@ while True:
     # backCam_warp = frameBack
     # rightCam_warp = frameRight 
 
-    frontCam_warp = cv2.warpPerspective(frameFront, Hfront, (frontActual.shape[1], frontActual.shape[0]))
-    leftCam_warp = cv2.warpPerspective(frameLeft, Hleft, (leftActual.shape[1], leftActual.shape[0]))
-    backCam_warp = cv2.warpPerspective(frameBack, Hback, (backActual.shape[1], backActual.shape[0]))
-    rightCam_warp = cv2.warpPerspective(frameRight, Hright, (rightActual.shape[1], rightActual.shape[0]))
+
+    frontCam_warp = warpSingleImage(frameFront, Hfront)
+    leftCam_warp = warpSingleImage(frameLeft, Hleft)
+    backCam_warp = warpSingleImage(frameBack, Hback)
+    rightCam_warp = warpSingleImage(frameRight, Hright)
+    frontCam_warp = frontCam_warp[400:960, 0:1250]
+    leftCam_warp = leftCam_warp[600:1228 , 1000:1900]
+    backCam_warp = backCam_warp[2250:2732 , 750:2100]
+    rightCam_warp = rightCam_warp[1500:1905 , 1250:2500]
 
     subStitchFL = warpTwoImages(leftCam_warp, frontCam_warp, HFL)
     subStitchFL_gray = cv2.cvtColor(subStitchFL, cv2.COLOR_RGB2GRAY)
@@ -473,16 +529,17 @@ while True:
     subStitchFLB_gray = cv2.cvtColor(subStitchFLB, cv2.COLOR_RGB2GRAY)
     subStitchFLBR = warpTwoImages(rightCam_warp, subStitchFLB, HFLBR)
 
-    #display the result of top down homography and stitching
+    #result of top down homography and stitching
     result = subStitchFLBR
-
-    result = cv2.resize(result, (1280, 720))
+    # result[874:1000, 1100:1275,:] = trinaFromAbove
+    result = result[400:1200,200:1200]
+    result = cv2.resize(result, (720, 720))
     
     cv2.putText(result, str(int(fps)), (10,70), cv2.FONT_HERSHEY_PLAIN, 3, (255,0,255),3)
-    cv2.imshow('front', frontCam_warp)
-    cv2.imshow('left', leftCam_warp)
-    cv2.imshow('back', backCam_warp)
-    cv2.imshow('right', rightCam_warp)
+    # cv2.imshow('front', frontCam_warp)
+    # cv2.imshow('left', leftCam_warp)
+    # cv2.imshow('back', backCam_warp)
+    # cv2.imshow('right', rightCam_warp)
 
     cv2.imshow('', result)
     if cv2.waitKey(1) == ord('q'):
