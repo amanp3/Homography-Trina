@@ -491,20 +491,27 @@ capRight.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 pTime = 0
 
+
+
 while True:
     cTime = time.time()
     fps = 1/(cTime - pTime)
     pTime = cTime
-
+    
+    
     ret, frameFront = capFront.read()
     ret, frameLeft = capLeft.read()
     ret, frameBack = capBack.read()
     ret, frameRight = capRight.read()
-
+    timeAfterCap = time.time()
+    print(timeAfterCap-pTime)
+    
     frameFront= undistortImage(frameFront, frontMtx, frontDist, frontNewCameraMatrix, frontROI)
     frameLeft = undistortImage(frameLeft, leftMtx, leftDist, leftNewCameraMatrix, leftROI)
     frameBack = undistortImage(frameBack, backMtx, backDist, backNewCameraMatrix, backROI)
     frameRight = undistortImage(frameRight, rightMtx, rightDist, rightNewCameraMatrix, rightROI)
+    timeAfterUndistort = time.time()
+    print(timeAfterUndistort-timeAfterCap)
 
     #circumventing top down homography for testing
     # frontCam_warp = frameFront
@@ -521,18 +528,24 @@ while True:
     leftCam_warp = leftCam_warp[600:1228 , 1000:1900]
     backCam_warp = backCam_warp[2250:2732 , 750:2100]
     rightCam_warp = rightCam_warp[1500:1905 , 1250:2500]
+    timeAfterTopDown = time.time()
+    print(timeAfterTopDown-timeAfterUndistort)
 
     subStitchFL = warpTwoImages(leftCam_warp, frontCam_warp, HFL)
     subStitchFL_gray = cv2.cvtColor(subStitchFL, cv2.COLOR_RGB2GRAY)
     subStitchFLB = warpTwoImages(backCam_warp, subStitchFL, HFLB)
     subStitchFLB_gray = cv2.cvtColor(subStitchFLB, cv2.COLOR_RGB2GRAY)
     subStitchFLBR = warpTwoImages(rightCam_warp, subStitchFLB, HFLBR)
+    timeAfterStitch = time.time()
+    print(timeAfterStitch-timeAfterTopDown)
 
     #result of top down homography and stitching
     result = subStitchFLBR
     # result[874:1000, 1100:1275,:] = trinaFromAbove
     result = result[400:1200,200:1200]
     result = cv2.resize(result, (720, 720))
+    timeToCrop = time.time()
+    print(timeToCrop-timeAfterStitch)
     
     cv2.putText(result, str(int(fps)), (10,70), cv2.FONT_HERSHEY_PLAIN, 3, (255,0,255),3)
     # cv2.imshow('front', frontCam_warp)
