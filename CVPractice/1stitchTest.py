@@ -15,11 +15,11 @@ import imutils
 cv2.ocl.setUseOpenCL(False)
 
 #where is each camera
-frontIndex = 2
+frontIndex = 0
 leftIndex = 3
-backIndex = 0
-rightIndex = 1
-spareCam = 0
+backIndex = 1
+rightIndex = 2
+spareCam = 1
 
 #cv2.undistort(img, mtx, dist, None, newcameramtx)
 #mtx, dist, newcameramtx
@@ -455,16 +455,15 @@ subStitchFLBR = warpTwoImages(rightStitchImage_warp, subStitchFLB, HFLBR)
 
 #manual crop
 # subStitchFLBR = subStitchFLBR[1620:2450,4240:5200]
-subStitchFLBR = subStitchFLBR[400:1200,200:1200]
+
+#find out where to crop
 # plt.imshow(subStitchFLBR)
 # plt.show()
+subStitchFLBR = subStitchFLBR[400:1200,200:1200]
 
-
-# cv2.imshow('subStitchFLBR', subStitchFLBR)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-
-    
+#find out where trina goes
+plt.imshow(subStitchFLBR)
+plt.show()
 trinaFromAbove= cv2.resize(trinaFromAbove, (200,200))
 trinaFromAbove = cv2.rotate(trinaFromAbove, ROTATE_90_COUNTERCLOCKWISE)
 # print(trinaFromAbove.shape)
