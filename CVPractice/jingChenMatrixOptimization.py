@@ -352,8 +352,8 @@ def calculateStitchingMatrix(img1, img1Gray, img2, img2Gray):
         img3 = cv2.drawMatches(img1,kpsA,img2,kpsB,np.random.choice(matches,100),
                             None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
-    plt.imshow(img3)
-    plt.show()
+    #plt.imshow(img3)
+    #plt.show()
 
     M = getHomography(kpsA, kpsB, featuresA, featuresB, matches, reprojThresh=4)
     if M is None:
@@ -362,7 +362,7 @@ def calculateStitchingMatrix(img1, img1Gray, img2, img2Gray):
     return Hstitch
 
 @jit(forceobj = True)
-def warpTwoImages(img1, img2, H):
+def warpTwoImages(img1, img2, H, res=False):
     '''warp img2 to img1 with homograph H'''
     mask = np.all(img1==np.array([0,0,0]).reshape(1,1,3), axis = 2)
 
@@ -387,6 +387,8 @@ def warpTwoImages(img1, img2, H):
     result = cv2.warpPerspective(img2, Ht.dot(H), (xmax-xmin, ymax-ymin))
     
     result[t[1]+blackPixels[0],t[0]+blackPixels[1],:] = img1[blackPixels[0],blackPixels[1],:]
+    if res:
+        return result, Ht
     return result
 
 @jit(forceobj = True)
@@ -459,19 +461,19 @@ backStitchImage_warp_gray = cv2.cvtColor(backStitchImage_warp, cv2.COLOR_RGB2GRA
 rightStitchImage_warp_gray = cv2.cvtColor(rightStitchImage_warp, cv2.COLOR_RGB2GRAY)
 
 HFL = calculateStitchingMatrix(frontStitchImage_warp, frontStitchImage_warp_gray, leftStitchImage_warp, leftStitchImage_warp_gray)
-subStitchFL = warpTwoImages(leftStitchImage_warp, frontStitchImage_warp, HFL)
+subStitchFL, HFLt = warpTwoImages(leftStitchImage_warp, frontStitchImage_warp, HFL, res=True)
 
 plt.imshow(subStitchFL)
 plt.show()
 subStitchFL_gray = cv2.cvtColor(subStitchFL, cv2.COLOR_RGB2GRAY)
 HFLB = calculateStitchingMatrix(subStitchFL, subStitchFL_gray, backStitchImage_warp, backStitchImage_warp_gray)
 
-subStitchFLB = warpTwoImages(backStitchImage_warp, subStitchFL, HFLB)
+subStitchFLB, HFLBt = warpTwoImages(backStitchImage_warp, subStitchFL, HFLB, res=True)
 plt.imshow(subStitchFLB)
 plt.show()
 subStitchFLB_gray = cv2.cvtColor(subStitchFLB, cv2.COLOR_RGB2GRAY)
 HFLBR = calculateStitchingMatrix(subStitchFLB, subStitchFLB_gray, rightStitchImage_warp, rightStitchImage_warp_gray)
-subStitchFLBR = warpTwoImages(rightStitchImage_warp, subStitchFLB, HFLBR)
+subStitchFLBR, HFLBRt = warpTwoImages(rightStitchImage_warp, subStitchFLB, HFLBR, res=True)
 cv2.imwrite('finalOutput.png', subStitchFLBR)
 # subStitchFLBR = cv2.resize(subStitchFLBR, (1280, 1280))
 
@@ -513,13 +515,14 @@ capRight.set(cv2.CAP_PROP_FRAME_HEIGHT, resHeight)
 # height1 = capFront.get(cv2.CAP_PROP_FRAME_HEIGHT)
 # print(width1, height1)
 
-HCombinedFL = HFL @ Hleft
+#HCombinedFL = HFL @ Hleft
+HCombinedFL = np.linalg.inv(Hleft) @ np.linalg.inv(HFL)
 print(Hleft)
 print(HFL)
 print(HCombinedFL)
-exit(0)
-HCombinedFLB = HFLB @ Hback
-HCombinedFLBR = HFLBR@Hright 
+#HCombinedFL /= HCombinedFL[2, 2]
+#HCombinedFLB = HFLB @ Hback
+#HCombinedFLBR = HFLBR@Hright 
 
 pTime = 0
 while True:
@@ -528,10 +531,10 @@ while True:
     pTime = cTime
     
     
-    ret, frameFront = capFront.read()
-    ret, frameLeft = capLeft.read()
-    ret, frameBack = capBack.read()
-    ret, frameRight = capRight.read()
+    ret, frameFront = 0, frontStitchImage# capFront.read()
+    ret, frameLeft = 0, leftStitchImage#capLeft.read()
+    ret, frameBack = 0, backStitchImage#capBack.read()
+    ret, frameRight = 0, rightStitchImage#capRight.read()
     timeAfterCap = time.time()
     print("Time to cap: ", timeAfterCap-pTime)
     
@@ -555,7 +558,7 @@ while True:
     # rightCam_warp = warpSingleImage(frameRight, Hright)
 
     frontCam_warp = cv2.warpPerspective(frameFront, Hfront, (frontStitchImage.shape[1], frontStitchImage.shape[0]))
-    # leftCam_warp = cv2.warpPerspective(frameLeft, Hleft, (leftStitchImage.shape[1], leftStitchImage.shape[0]))
+    #leftCam_warp = cv2.warpPerspective(frameLeft, Hleft, (leftStitchImage.shape[1], leftStitchImage.shape[0]))
     # backCam_warp = cv2.warpPerspective(frameBack, Hback, (backStitchImage.shape[1], backStitchImage.shape[0]))
     # rightCam_warp = cv2.warpPerspective(frameRight, Hright, (rightStitchImage.shape[1], rightStitchImage.shape[0]))
 
@@ -568,15 +571,16 @@ while True:
     print("Time to top down: ", timeAfterTopDown-timeAfterUndistort)
 
     subStitchFL = warpTwoImages(frameLeft, frontCam_warp, HCombinedFL)
+    #subStitchFL = warpTwoImages(leftCam_warp, frontCam_warp, HFL)
     # subStitchFL_gray = cv2.cvtColor(subStitchFL, cv2.COLOR_RGB2GRAY)
-    subStitchFLB = warpTwoImages(frameBack, subStitchFL, HCombinedFLB)
+    # subStitchFLB = warpTwoImages(frameBack, subStitchFL, HCombinedFLB)
     # subStitchFLB_gray = cv2.cvtColor(subStitchFLB, cv2.COLOR_RGB2GRAY)
-    subStitchFLBR = warpTwoImages(frameRight, subStitchFLB, HCombinedFLBR)
+    # subStitchFLBR = warpTwoImages(frameRight, subStitchFLB, HCombinedFLBR)
     timeAfterStitch = time.time()
     print("Time to stitch: ", timeAfterStitch-timeAfterTopDown)
 
     #result of top down homography and stitching
-    result = subStitchFLBR
+    result = subStitchFL
     # result[874:1000, 1100:1275,:] = trinaFromAbove
     # result = result[400:1200,200:1200]
     result = cv2.resize(result, (720, 720))
