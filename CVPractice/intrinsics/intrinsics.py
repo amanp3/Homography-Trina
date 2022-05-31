@@ -8,7 +8,7 @@ the sensor module and logger with the chess board poster in lab. A pdf of
 such a board is available at
 http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration?action=AttachFile&do=view&target=check-108.pdf
 """
-
+#Patrick Naughton
 import argparse
 import numpy as np
 import cv2 as cv

@@ -3,13 +3,13 @@ import os
 
 cap = cv2.VideoCapture(3)
 
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 width1 = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 height1 = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 print(width1, height1)
 
-path = r"C:\Users\Aman\Desktop\TRINA\OPENCV\DistortionImages\BackCamera"
+path = r"C:\Users\Aman\Desktop\TRINA\OPENCV\DistortionImages\LeftCamera"
 i=0
 run = True
 while(run):
@@ -23,7 +23,7 @@ while(run):
     if cv2.waitKey(1) & 0xFF == ord('q'):
         cv2.destroyAllWindows()
         break
-    if i == 30:
+    if i == 20:
         print("That is enough Images for this camera's intrinsic calibration")
         run = False
         

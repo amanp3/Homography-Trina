@@ -56,7 +56,7 @@ print(roi)
 # np.save(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\backDist', dist)
 # np.save(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\backNewCameraMatrix', newcameramtx)
 # np.save(r'C:\Users\Aman\Desktop\School\Python\TRINA\IntrinsicsData\backROI', roi)
-#right, front, left, back
+#left, front, right, back
 t = time.time()
 
 

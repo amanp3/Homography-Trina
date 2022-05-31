@@ -2,10 +2,12 @@ import numpy as np
 import cv2
 import time
 
-camIndex = 3
+camIndex = 2
 
 cap = cv2.VideoCapture(camIndex)
-
+width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+print(width, height)
 
 pTime = 0
 i = 0
@@ -18,7 +20,7 @@ while True:
     pTime = cTime
     
     ret, frame = cap.read()
-    
+ 
     cv2.putText(frame, str(int(fps)), (10,70), cv2.FONT_HERSHEY_PLAIN, 3, (255,0,255),3)
     cv2.imshow('Live Feed of Cam#: ' + str(camIndex), frame)
     
