@@ -11,9 +11,9 @@ import cv2
 import time
 import matplotlib.pyplot as plt
 import io
-import imutils
+# import imutils
 cv2.ocl.setUseOpenCL(False)
-from numba import jit,cuda,njit
+# from numba import jit,cuda,njit
 
 resWidth = 640
 resHeight = 480
