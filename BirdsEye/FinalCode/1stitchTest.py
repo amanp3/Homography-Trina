@@ -5,7 +5,7 @@
 # from re import sub
 # from turtle import back, left, right
 # from cv2 import destroyAllWindows
-from cv2 import ROTATE_90_COUNTERCLOCKWISE
+# from cv2 import ROTATE_90_COUNTERCLOCKWISE
 import numpy as np
 import cv2
 import time
@@ -228,7 +228,7 @@ leftDesired = cv2.imread(pathLeftCamDesired)
 backActual = cv2.imread(pathBackCamActual)
 backDesired = cv2.imread(pathBackCamDesired)
 
-@jit(forceobj = True)
+# @jit(forceobj = True)
 def undistortImage(img, mtx, dist, newcameramtx, roi):
     h,  w = img.shape[:2]
     dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
@@ -357,7 +357,7 @@ def calculateStitchingMatrix(img1, img1Gray, img2, img2Gray):
     (matches, Hstitch, status) = M
     return Hstitch
 
-@jit(forceobj = True)
+# @jit(forceobj = True)
 def warpTwoImages(img1, img2, H):
     '''warp img2 to img1 with homograph H'''
     mask = np.all(img1==np.array([0,0,0]).reshape(1,1,3), axis = 2)
@@ -385,7 +385,7 @@ def warpTwoImages(img1, img2, H):
     result[t[1]+blackPixels[0],t[0]+blackPixels[1],:] = img1[blackPixels[0],blackPixels[1],:]
     return result
 
-@jit(forceobj = True)
+# @jit(forceobj = True)
 def warpSingleImage(img,H):
     h,w = img.shape[:2]
     # print(h,w)
